@@ -27,11 +27,12 @@ the test.
 
 COMMANDS
 ------------------------------------------------------------------------------
+#### VIN
     VIN <PINS...>
 Specifies that `PINS...` should be used as positive voltage supply.
 Valid pin values are: 5, 14, 15, 16. 
 
-
+#### GND
     GND <PINS...>
 Specifies that `PINS..` should be used as ground.
 Valid pin values are: 8, 12.
@@ -42,7 +43,7 @@ Delays further execution by `TIME` milliseconds (ms).
 *NOTE*: If a delay larger than 65535 ms is needed, it must be split into
 multiple `DELAY` calls.
 
-
+#### SET
     SET (<VALUE> <PINS...>)...
 Sets the `PINS...` to the value specified by ``VALUE``. 
 `VALUE` is either `ON` or `OFF` (without the qoutation marks). 
@@ -53,7 +54,7 @@ any pins, which have not yet been given a value. Note however that no pins may
 be specified after the `REST` keyword, but it is *not* necessary to have pins 
 *before* `REST`.
 
-### Some examples:
+##### Some examples:
 
     SET ON 1 2
 This will set pins 1 and 2 to `ON`. The rest of the pins will stay in their
@@ -69,7 +70,7 @@ This will set pins 1 and 2 to `ON` and every other pin to `OFF`.
     SET ON REST
 This will set every pin to `ON` since no pin was specified before `REST`.
 
-
+#### CHECK
     CHECK (<VALUE> <PINS...>)...
 Checks whether `PINS...` have the value specified by `VALUE`.
 `VALUE` is either `ON` or `OFF` (without the qoutation marks).
@@ -82,7 +83,7 @@ to represent every pin which have not been given a value.
 then `CHECK` will assume it should be `ON`, regardless of what is specified by
 the arguments.
 
-### Some examples:
+##### Some examples:
 
     CHECK ON 1 OFF REST
 This will check whether pin 1 is `ON` and the rest of the pins are `OFF`.
@@ -93,7 +94,6 @@ This will check whether pin 1, 2 and 3 are `ON` and the rest of the pins are
 
     CHECK OFF 1 2 OFF REST
 This will check whether pin 1 and 2 are `ON` and the rest of the pins are `OFF`.
-
 
 EXAMPLES
 ------------------------------------------------------------------------------
