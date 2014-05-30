@@ -2,25 +2,25 @@ ctp
 ==============================================================================
 Script for compiling a protocol file to a binary file which can be uploaded to
 the component tester's SD card. This was made since hand compiling every
-protocol quickly gets tedious, and escpecially for longer protocols it is very
-easy to make errors. Therefore i made a python script to automate the process.
+protocol quickly gets tedious, and especially for longer protocols it is very
+easy to make errors. Therefore I made a python script to automate the process.
 
     usage: 
         ctp2.py [-h | --help] [-o FILE] [-v | --verify] [INFILE | -c | --code]
 
     -h --help       show this
     -o FILE         specify output file [default: ./out.tst]
-    -v --verify     show if compilation was succesfull but make no output file
+    -v --verify     show if compilation was successful but make no output file
     -c --code       read code from stdin, instead of a file
 
 PROTOCOL SYNTAX
 ==============================================================================
 A protocol should be described as a series of commands with arguments.
-Each command must be on a seperate. Lines beginning with a '#' and lines only
-consisting of whitespace are skipped. Case (even mixed case liKe tHiS) 
+Each command must be on a seperate line. Lines beginning with a `#` and lines 
+only consisting of whitespace are skipped. Case (even mixed case liKe tHiS) 
 does not matter.
 
-Protocols will be run untill a `CHECK` command finds that the pin state does 
+Protocols will be run until a `CHECK` command finds that the pin state does 
 not match what was specified. If this happens the component has failed the test.
 If the protocol is run through without an error then the component has passed
 the test.
@@ -40,7 +40,7 @@ Valid pin values are: 8, 12.
 
     DELAY <TIME>
 Delays further execution by `TIME` milliseconds (ms).
-*NOTE*: If a delay larger than 65535 ms is needed, it must be split into
+*NOTE*: If a delay is larger than 65535 ms is needed, it must be split into
 multiple `DELAY` calls.
 
 #### SET
@@ -50,7 +50,7 @@ Sets the `PINS...` to the value specified by ``VALUE``.
 `PINS...` is a list of pin numbers (between 1 and 16) seperated by a space. 
 Any pins which have not been given a value will remain in their current state 
 (either `ON` or `OFF`). Furthermore the `REST` keyword may be used to specify
-any pins, which have not yet been given a value. Note however that no pins may
+any pins which have not yet been given a value. Note however that no pins may
 be specified after the `REST` keyword, but it is *not* necessary to have pins 
 *before* `REST`.
 
