@@ -20,8 +20,8 @@ Each command must be on a seperate. Lines beginning with a '#' and lines only
 consisting of whitespace are skipped. Case (even mixed case liKe tHiS) 
 does not matter.
 
-Protocols will be run untill a CHECK command finds that the pin state does not
-match what was specified. If this happens the component has failed the test.
+Protocols will be run untill a `CHECK` command finds that the pin state does 
+not match what was specified. If this happens the component has failed the test.
 If the protocol is run through without an error then the component has passed
 the test.
 
@@ -39,7 +39,7 @@ Valid pin values are: 8, 12.
 
     DELAY <TIME>
 Delays further execution by `TIME` milliseconds (ms).
-NOTE: If a delay larger than 65535 ms is needed, it must be split into
+*NOTE*: If a delay larger than 65535 ms is needed, it must be split into
 multiple `DELAY` calls.
 
 
@@ -78,7 +78,7 @@ The way `CHECK` is called is similar to `SET` except that a value must be
 specified for all pins. However, it is still possible to use the `REST` keyword 
 to represent every pin which have not been given a value.
 
-*NOTE*: If a pin has previously been set to `ON` with a call to VIN or SET,
+*NOTE*: If a pin has previously been set to `ON` with a call to `VIN` or `SET`,
 then `CHECK` will assume it should be `ON`, regardless of what is specified by
 the arguments.
 
