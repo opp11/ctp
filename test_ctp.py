@@ -1,16 +1,15 @@
 import unittest as ut
 import ctp
 
-class ParsingTest(ut.TestCase):
-    def test_is_keyword(self):
-        # test valid cases
+class Test_is_keyword(ut.TestCase):
+    def test_valids(self):
         self.assertTrue(ctp._is_keyword('check'))
         self.assertTrue(ctp._is_keyword('set'))
         self.assertTrue(ctp._is_keyword('vin'))
         self.assertTrue(ctp._is_keyword('delay'))
         self.assertTrue(ctp._is_keyword('rest'))
 
-        # test invalid cases
+    def test_invalids(self):
         self.assertFalse(ctp._is_keyword(10))
         self.assertFalse(ctp._is_keyword(10.2))
         self.assertFalse(ctp._is_keyword('habla'))
@@ -18,8 +17,8 @@ class ParsingTest(ut.TestCase):
         self.assertFalse(ctp._is_keyword(['check', 'vin']))
         self.assertFalse(ctp._is_keyword(['check', 'set']))
 
-    def test_is_pin(self):
-        # test valid cases
+class Test_is_pin(ut.TestCase):
+    def test_valids(self):
         self.assertTrue(ctp._is_pin('1'))
         self.assertTrue(ctp._is_pin('2'))
         self.assertTrue(ctp._is_pin('3'))
@@ -37,13 +36,14 @@ class ParsingTest(ut.TestCase):
         self.assertTrue(ctp._is_pin('15'))
         self.assertTrue(ctp._is_pin('16'))
 
-        # test invalid cases
+    def test_invalids(self):
         self.assertFalse(ctp._is_pin('0'))
         self.assertFalse(ctp._is_pin('17'))
         self.assertFalse(ctp._is_pin('-1'))     
         self.assertFalse(ctp._is_pin('habla'))
 
-    def test_pins_to_arg(self):
+class Test_pins_to_arg(ut.TestCase):
+    def test_valids(self):
         case = {
             1:True, 2:True, 3:True, 4:True, 
             5:True, 6:True, 7:True, 8:True,
@@ -68,10 +68,12 @@ class ParsingTest(ut.TestCase):
         self.assertEqual(ctp._pins_to_arg(case),0b1111)
         self.assertNotEqual(ctp._pins_to_arg(case),0b11110)
 
+    def test_invalids(self):
         case = [ True, True, True, True, False ]
         self.assertRaises(TypeError,ctp._pins_to_arg, case)            
 
-    def test_get_pin_vals(self):
+class Test_get_pin_vals(ut.TestCase):
+    def test_valids(self):
         case = 'on 1 2'
         self.assertEqual(ctp._get_pin_vals(case.split()), {1: True, 2: True})
         self.assertTrue(len(ctp._get_pin_vals(case.split())) == 2)
@@ -86,6 +88,7 @@ class ParsingTest(ut.TestCase):
             {1: True, 2: True, 3: False, 4: False})
         self.assertTrue(len(ctp._get_pin_vals(case.split())) == 4)
 
+    def test_rest_keyword(self):
         case = 'on 1 2 off rest'
         self.assertEqual(ctp._get_pin_vals(case.split()), 
             {
@@ -126,6 +129,7 @@ class ParsingTest(ut.TestCase):
             })
         self.assertTrue(len(ctp._get_pin_vals(case.split())) == 16)
 
+    def test_invalids(self):
         case = 'habla 1'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "'habla' is not a valid pin or value", ctp._get_pin_vals, case)
@@ -139,6 +143,7 @@ class ParsingTest(ut.TestCase):
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "'1,' is not a valid pin or value", ctp._get_pin_vals, case)
 
+    def test_no_value_given(self):
         case = '1'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "pins must be preceded by either ON or OFF", 
@@ -148,6 +153,7 @@ class ParsingTest(ut.TestCase):
             "pins must be preceded by either ON or OFF", 
             ctp._get_pin_vals, case)
 
+    def test_rest_not_last(self):
         case = 'on rest 2'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "REST keyword must be the last argument", ctp._get_pin_vals, case)
@@ -155,6 +161,7 @@ class ParsingTest(ut.TestCase):
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "REST keyword must be the last argument", ctp._get_pin_vals, case)
 
+    def test_mult_values(self):
         case = 'on 1 1'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "pin 1 has already been given a value", ctp._get_pin_vals, case)
@@ -162,16 +169,20 @@ class ParsingTest(ut.TestCase):
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "pin 1 has already been given a value", ctp._get_pin_vals, case)
 
-    def test_cmd_check(self):
+class Test_cmd_check(ut.TestCase):
+    def test_valids(self):
         case = 'on 1 2 off rest'.split()
         self.assertEqual(ctp._cmd_check(case), b'\x01\x03\x00')
         case = 'on rest'.split()
         self.assertEqual(ctp._cmd_check(case), b'\x01\xff\xff')
+
+    def test_invalids(self):
         case = 'on 1 2'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "all pins must be given a value", ctp._cmd_check, case)
 
-    def test_cmd_set(self):
+class Test_cmd_set(ut.TestCase):
+    def test_valids(self):
         case = 'on 1 2 off rest'.split()
         self.assertEqual(ctp._cmd_set(case), b'\x02\x03\x00')
         
@@ -185,12 +196,14 @@ class ParsingTest(ut.TestCase):
         case = 'off 3 1'.split()
         self.assertEqual(ctp._cmd_set(case), b'\x02\xfa\xff')
 
-    def test_cmd_vin(self):
+class Test_cmd_vin(ut.TestCase):
+    def test_valids(self):
         case = '5 14 15 16'.split()
         self.assertEqual(ctp._cmd_vin(case), b'\x03\x10\xe0')
         case = '16'.split()
         self.assertEqual(ctp._cmd_vin(case), b'\x03\x00\x80')
 
+    def test_invalid_pins(self):
         case = '1 2'
         self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid vin pin",
             ctp._cmd_vin, case)
@@ -201,12 +214,14 @@ class ParsingTest(ut.TestCase):
         self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid vin pin",
             ctp._cmd_vin, case)
 
-    def test_cmd_gnd(self):
+class Test_cmd_gnd(ut.TestCase):
+    def test_valids(self):
         case = '8 12'.split()
         self.assertEqual(ctp._cmd_gnd(case), b'\x04\x80\x08')
         case = '12'.split()
         self.assertEqual(ctp._cmd_gnd(case), b'\x04\x00\x08')
 
+    def test_invalid_pins(self):
         case = '1 2'
         self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid ground pin", 
             ctp._cmd_gnd, case)
@@ -217,7 +232,8 @@ class ParsingTest(ut.TestCase):
         self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid ground pin", 
             ctp._cmd_gnd, case)
 
-    def test_cmd_delay(self):
+class Test_cmd_delay(ut.TestCase):
+    def test_valids(self):
         case = '100'.split()
         self.assertEqual(ctp._cmd_delay(case), b'\x05\x64\x00')
         case = '0'.split()
@@ -225,6 +241,7 @@ class ParsingTest(ut.TestCase):
         case = '65535'.split()
         self.assertEqual(ctp._cmd_delay(case), b'\x05\xff\xff')
 
+    def test_invalids(self):
         case = 'habla'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError,
             'delay time must be a number', ctp._cmd_delay, case)
@@ -238,6 +255,90 @@ class ParsingTest(ut.TestCase):
         self.assertRaisesRegex(ctp.CtpSyntaxError,
             'delay time must be less than {}'.format(2**16 - 1),
             ctp._cmd_delay, case)
+
+class Test_parse_code(ut.TestCase):
+    def setUp(self):
+        self.res = [
+            b'\x04\x80\x00',
+            b'\x03\x00\x80',
+            b'\x02\x03\x00',
+            b'\x01\x04\x00'
+        ]
+
+    def test_valids(self):
+        case = [
+            'gnd 8\n',
+            'vin 16\n',
+            'set on 1 2\n',
+            'check on 3 off rest\n'
+        ]        
+        # make sure the pin_state is reset
+        for i in ctp._cmd_set.pin_state:
+            ctp._cmd_set.pin_state[i] = False
+        self.assertEqual(ctp.parse_code(case), self.res)
+
+    def test_skips(self):
+        # test for blank lines
+        case = [
+            'gnd 8\n',
+            'vin 16\n',
+            '\n',
+            'set on 1 2\n',
+            'check on 3 off rest\n'
+        ]
+        # make sure the pin_state is reset
+        for i in ctp._cmd_set.pin_state:
+            ctp._cmd_set.pin_state[i] = False
+        self.assertEqual(ctp.parse_code(case), self.res)
+
+        # test for whitespace lines
+        case = [
+            'gnd 8\n',
+            'vin 16\n',
+            '\t\n',
+            'set on 1 2\n',
+            'check on 3 off rest\n'
+        ]
+        # make sure the pin_state is reset
+        for i in ctp._cmd_set.pin_state:
+            ctp._cmd_set.pin_state[i] = False
+        self.assertEqual(ctp.parse_code(case), self.res)
+        case = [
+            'gnd 8\n',
+            'vin 16\n',
+            '     \n',
+            'set on 1 2\n',
+            'check on 3 off rest\n'
+        ]
+        # make sure the pin_state is reset
+        for i in ctp._cmd_set.pin_state:
+            ctp._cmd_set.pin_state[i] = False
+        self.assertEqual(ctp.parse_code(case), self.res)
+
+        # test for comments
+        case = [
+            'gnd 8\n',
+            'vin 16\n',
+            '# comment\n',
+            'set on 1 2\n',
+            'check on 3 off rest\n'
+        ]
+        # make sure the pin_state is reset
+        for i in ctp._cmd_set.pin_state:
+            ctp._cmd_set.pin_state[i] = False
+        self.assertEqual(ctp.parse_code(case), self.res)
+
+    def test_extra_whitespace(self):
+        case = [
+            'gnd   8\n',
+            'vin \t16\n',
+            'set on 1 2\n',
+            'check on 3 off rest\n'
+        ]
+        # make sure the pin_state is reset
+        for i in ctp._cmd_set.pin_state:
+            ctp._cmd_set.pin_state[i] = False
+        self.assertEqual(ctp.parse_code(case), self.res)
 
 def main():
     ut.main()
