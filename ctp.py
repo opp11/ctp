@@ -299,7 +299,7 @@ def make_file(fname, commands):
             file.write(cmd)
         file.write(b'END')
 
-if __name__ == '__main__':
+def main():
     opts = docopt(__doc__)
 
     code = None
@@ -319,3 +319,6 @@ if __name__ == '__main__':
         print(err.message)
         if opts['--verify']:
             print('compilation failed')
+
+if __name__ == '__main__':
+    main()
