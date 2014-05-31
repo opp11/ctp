@@ -130,14 +130,16 @@ class CtpSyntaxError(Exception):
         self.message = message.format(*args)
 
 _ctp_cmd_codes = {
-    'check':1,
-    'set':2,
-    'vin':3,
-    'gnd':4,
-    'delay':5
+    'check': 1,
+    'set': 2,
+    'vin': 3,
+    'gnd': 4,
+    'delay': 5
 }
 
 def _pins_to_arg(pins):
+    if type(pins) is not type(dict()):
+        raise TypeError("pins must be a dictionary")
     out = 0
     for pin in pins:
         if pins[pin]:
@@ -171,9 +173,9 @@ def _get_pin_vals(args):
                 if pin not in pins:
                     pins[pin] = check_val
         elif _is_pin(arg):
-            if arg in pins:
+            if int(arg) in pins:
                 raise CtpSyntaxError('pin {} has already been given a value', 
-                    pin)
+                    arg)
             elif check_val is None:
                 raise CtpSyntaxError(
                     'pins must be preceded by either ON or OFF')
@@ -246,8 +248,10 @@ def _cmd_delay(args):
         raise CtpSyntaxError('only 1 delay value can be specified')
     try:
         time = int(args[0])
-        if time > 2**16 - 1:
+        if time > (2**16 - 1):
             raise CtpSyntaxError('delay time must be less than {}', 2**16 - 1)
+        if time < 0:
+            raise CtpSyntaxError('delay time must be greater than 0')
         return struct.pack('<BH', _ctp_cmd_codes['delay'], time)
     except ValueError:
         raise CtpSyntaxError('delay time must be a number')
