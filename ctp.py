@@ -273,8 +273,8 @@ def parse_code(code):
     }
     # parse alle lines
     for line_num, line in enumerate(code):
-        if len(line) > 1 and not line[0] == '#':
-            args = line.lower().split()
+        args = line.lower().split()
+        if len(args) > 1 and not line[0] == '#':
             # attempt to parse the line, and if any errors occur
             # then add information as to where it happened and reraise
             if args[0] in parsers:
