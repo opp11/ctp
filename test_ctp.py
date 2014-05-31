@@ -1,7 +1,7 @@
 import unittest as ut
 import ctp
 
-class TestCtp(ut.TestCase):
+class ParsingTest(ut.TestCase):
     def test_is_keyword(self):
         # test valid cases
         self.assertTrue(ctp._is_keyword('check'))
@@ -69,8 +69,7 @@ class TestCtp(ut.TestCase):
         self.assertNotEqual(ctp._pins_to_arg(case),0b11110)
 
         case = [ True, True, True, True, False ]
-        with self.assertRaises(TypeError):
-            ctp._pins_to_arg(case)
+        self.assertRaises(TypeError,ctp._pins_to_arg, case)            
 
     def test_get_pin_vals(self):
         case = 'on 1 2'
@@ -128,26 +127,40 @@ class TestCtp(ut.TestCase):
         self.assertTrue(len(ctp._get_pin_vals(case.split())) == 16)
 
         case = 'habla 1'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
-        case = 'set habla'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
-        case = 'set on habla'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
-        case = 'set on 1, 2'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "'habla' is not a valid pin or value", ctp._get_pin_vals, case)
+        case = 'habla'.split()
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "'habla' is not a valid pin or value", ctp._get_pin_vals, case)
+        case = 'on habla'.split()
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "'habla' is not a valid pin or value", ctp._get_pin_vals, case)
+        case = 'on 1, 2'.split()
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "'1,' is not a valid pin or value", ctp._get_pin_vals, case)
 
         case = '1'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "pins must be preceded by either ON or OFF", 
+            ctp._get_pin_vals, case)
         case = 'rest'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "pins must be preceded by either ON or OFF", 
+            ctp._get_pin_vals, case)
+
         case = 'on rest 2'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "REST keyword must be the last argument", ctp._get_pin_vals, case)
         case = 'on rest off 1'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "REST keyword must be the last argument", ctp._get_pin_vals, case)
+
         case = 'on 1 1'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "pin 1 has already been given a value", ctp._get_pin_vals, case)
         case = 'on 1 off 1'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._get_pin_vals, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "pin 1 has already been given a value", ctp._get_pin_vals, case)
 
     def test_cmd_check(self):
         case = 'on 1 2 off rest'.split()
@@ -155,7 +168,8 @@ class TestCtp(ut.TestCase):
         case = 'on rest'.split()
         self.assertEqual(ctp._cmd_check(case), b'\x01\xff\xff')
         case = 'on 1 2'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_check, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "all pins must be given a value", ctp._cmd_check, case)
 
     def test_cmd_set(self):
         case = 'on 1 2 off rest'.split()
@@ -178,11 +192,14 @@ class TestCtp(ut.TestCase):
         self.assertEqual(ctp._cmd_vin(case), b'\x03\x00\x80')
 
         case = '1 2'
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_vin, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid vin pin",
+            ctp._cmd_vin, case)
         case = '17'
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_vin, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid vin pin",
+            ctp._cmd_vin, case)
         case = 'habla'
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_vin, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid vin pin",
+            ctp._cmd_vin, case)
 
     def test_cmd_gnd(self):
         case = '8 12'.split()
@@ -191,11 +208,14 @@ class TestCtp(ut.TestCase):
         self.assertEqual(ctp._cmd_gnd(case), b'\x04\x00\x08')
 
         case = '1 2'
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_gnd, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid ground pin", 
+            ctp._cmd_gnd, case)
         case = '17'
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_gnd, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid ground pin", 
+            ctp._cmd_gnd, case)
         case = 'habla'
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_gnd, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid ground pin", 
+            ctp._cmd_gnd, case)
 
     def test_cmd_delay(self):
         case = '100'.split()
@@ -206,13 +226,18 @@ class TestCtp(ut.TestCase):
         self.assertEqual(ctp._cmd_delay(case), b'\x05\xff\xff')
 
         case = 'habla'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_delay, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError,
+            'delay time must be a number', ctp._cmd_delay, case)
         case = '100 100'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_delay, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError,
+            'only 1 delay value can be specified', ctp._cmd_delay, case)
         case = '-1'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_delay, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError,
+            'delay time must be greater than 0', ctp._cmd_delay, case)
         case = '65536'.split()
-        self.assertRaises(ctp.CtpSyntaxError, ctp._cmd_delay, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError,
+            'delay time must be less than {}'.format(2**16 - 1),
+            ctp._cmd_delay, case)
 
 def main():
     ut.main()
