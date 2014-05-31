@@ -128,6 +128,8 @@ __author__ = 'Patrick M. Jensen'
 class CtpSyntaxError(Exception):
     def __init__(self, message, *args):
         self.message = message.format(*args)
+    def __str__(self):
+        return self.message
 
 _ctp_cmd_codes = {
     'check': 1,
@@ -181,7 +183,7 @@ def _get_pin_vals(args):
                     'pins must be preceded by either ON or OFF')
             pins[int(arg)] = check_val
         else:
-            raise CtpSyntaxError("'{}'' is not a valid pin or value", arg)
+            raise CtpSyntaxError("'{}' is not a valid pin or value", arg)
     return pins
 
 def _cmd_check(args):
@@ -189,7 +191,7 @@ def _cmd_check(args):
     pins = _get_pin_vals(args)
     for pin in range(1, 17):
         if pin not in pins:
-            raise CtpSyntaxError("pin {} has not been given a value", pin)
+            raise CtpSyntaxError("all pins must be given a value", pin)
     return struct.pack('<BH', _ctp_cmd_codes['check'], _pins_to_arg(pins))
 
 def _cmd_set(args):
