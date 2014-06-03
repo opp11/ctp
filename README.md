@@ -37,7 +37,7 @@ Valid pin values are: 5, 14, 15, 16.
 Specifies that `PINS..` should be used as ground.
 Valid pin values are: 8, 12.
 
-
+#### DELAY
     DELAY <TIME>
 Delays further execution by `TIME` milliseconds (ms).
 *NOTE*: If a delay is larger than 65535 ms is needed, it must be split into
