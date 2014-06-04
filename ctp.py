@@ -186,17 +186,24 @@ def _get_pin_vals(args):
             raise CtpSyntaxError("'{}' is not a valid pin or value", arg)
     return pins
 
-def _cmd_check(args):
+def _cmd_check(args, where):
     global _ctp_cmd_codes
-    pins = _get_pin_vals(args)
+    try:
+        pins = _get_pin_vals(args)
+    except CtpSyntaxError as err:
+        raise CtpSyntaxError("check: {}: {}", where, err)
     for pin in range(1, 17):
         if pin not in pins:
-            raise CtpSyntaxError("all pins must be given a value", pin)
+            raise CtpSyntaxError("check: {}: all pins must be given a value", 
+                where)
     return struct.pack('<BH', _ctp_cmd_codes['check'], _pins_to_arg(pins))
 
-def _cmd_set(args):
+def _cmd_set(args, where):
     global _ctp_cmd_codes
-    pins = _get_pin_vals(args)
+    try:
+        pins = _get_pin_vals(args)
+    except CtpSyntaxError as err:
+        raise CtpSyntaxError("set: {}: {}", where, err)
     for pin, val in pins.items():
         _cmd_set.pin_state[pin] = val
     return struct.pack('<BH', _ctp_cmd_codes['set'], 
@@ -220,7 +227,7 @@ _cmd_set.pin_state = {
     16: False,
 }
 
-def _cmd_vin(args):
+def _cmd_vin(args, where):
     global _ctp_cmd_codes
     valid_vins = ['5', '14', '15', '16']
     pins = dict()
@@ -228,11 +235,11 @@ def _cmd_vin(args):
         if arg in valid_vins:
             pins[int(arg)] = True
         else:
-            raise CtpSyntaxError("Invalid vin pin")
+            raise CtpSyntaxError("vin: {}: invalid vin pin", where)
 
     return struct.pack('<BH', _ctp_cmd_codes['vin'], _pins_to_arg(pins))
 
-def _cmd_gnd(args):
+def _cmd_gnd(args, where):
     global _ctp_cmd_codes
     valid_gnds = ['8', '12']
     pins = dict()
@@ -240,23 +247,26 @@ def _cmd_gnd(args):
         if arg in valid_gnds:
             pins[int(arg)] = True
         else:
-            raise CtpSyntaxError("Invalid ground pin")
+            raise CtpSyntaxError("gnd: {}: invalid ground pin", where)
 
     return struct.pack('<BH', _ctp_cmd_codes['gnd'], _pins_to_arg(pins))
 
-def _cmd_delay(args):
+def _cmd_delay(args, where):
     global _ctp_cmd_codes
     if len(args) > 1:
-        raise CtpSyntaxError('only 1 delay value can be specified')
+        raise CtpSyntaxError('delay: {}: only 1 delay value can be specified',
+            where)
     try:
         time = int(args[0])
         if time > (2**16 - 1):
-            raise CtpSyntaxError('delay time must be less than {}', 2**16 - 1)
+            raise CtpSyntaxError(
+                'delay: {}: delay time must be less than {}', where, 65535)
         if time < 0:
-            raise CtpSyntaxError('delay time must be greater than 0')
+            raise CtpSyntaxError(
+                'delay: {}: delay time must be greater than 0', where)
         return struct.pack('<BH', _ctp_cmd_codes['delay'], time)
     except ValueError:
-        raise CtpSyntaxError('delay time must be a number')
+        raise CtpSyntaxError('delay: {}: delay time must be a number', where)
 
 def parse_code(code):
     """
@@ -275,14 +285,9 @@ def parse_code(code):
     for line_num, line in enumerate(code):
         args = line.lower().split()
         if len(args) > 1 and not line[0] == '#':
-            # attempt to parse the line, and if any errors occur
-            # then add information as to where it happened and reraise
+            # attempt to parse the line
             if args[0] in parsers:
-                try:
-                    commands.append(parsers[args[0]](args[1:]))
-                except CtpSyntaxError as err:
-                    raise CtpSyntaxError('error: {}: {}: {}',
-                        line_num + 1, args[0], err)
+                commands.append(parsers[args[0]](args[1:], line_num + 1))
             else:
                 raise CtpSyntaxError('error: {}: {} is not a command', 
                     line_num + 1, args[0])
