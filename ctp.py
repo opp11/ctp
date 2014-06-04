@@ -131,7 +131,7 @@ class CtpSyntaxError(Exception):
     def __str__(self):
         return self.message
 
-_ctp_cmd_codes = {
+_cmd_codes = {
     'check': 1,
     'set': 2,
     'vin': 3,
@@ -187,7 +187,7 @@ def _get_pin_vals(args):
     return pins
 
 def _cmd_check(args, where):
-    global _ctp_cmd_codes
+    global _cmd_codes
     try:
         pins = _get_pin_vals(args)
     except CtpSyntaxError as err:
@@ -196,17 +196,17 @@ def _cmd_check(args, where):
         if pin not in pins:
             raise CtpSyntaxError("check: {}: all pins must be given a value", 
                 where)
-    return struct.pack('<BH', _ctp_cmd_codes['check'], _pins_to_arg(pins))
+    return struct.pack('<BH', _cmd_codes['check'], _pins_to_arg(pins))
 
 def _cmd_set(args, where):
-    global _ctp_cmd_codes
+    global _cmd_codes
     try:
         pins = _get_pin_vals(args)
     except CtpSyntaxError as err:
         raise CtpSyntaxError("set: {}: {}", where, err)
     for pin, val in pins.items():
         _cmd_set.pin_state[pin] = val
-    return struct.pack('<BH', _ctp_cmd_codes['set'], 
+    return struct.pack('<BH', _cmd_codes['set'], 
         _pins_to_arg(_cmd_set.pin_state))
 _cmd_set.pin_state = {
     1: False,
@@ -228,7 +228,7 @@ _cmd_set.pin_state = {
 }
 
 def _cmd_vin(args, where):
-    global _ctp_cmd_codes
+    global _cmd_codes
     valid_vins = ['5', '14', '15', '16']
     pins = dict()
     for arg in args:
@@ -237,10 +237,10 @@ def _cmd_vin(args, where):
         else:
             raise CtpSyntaxError("vin: {}: invalid vin pin", where)
 
-    return struct.pack('<BH', _ctp_cmd_codes['vin'], _pins_to_arg(pins))
+    return struct.pack('<BH', _cmd_codes['vin'], _pins_to_arg(pins))
 
 def _cmd_gnd(args, where):
-    global _ctp_cmd_codes
+    global _cmd_codes
     valid_gnds = ['8', '12']
     pins = dict()
     for arg in args:
@@ -249,10 +249,10 @@ def _cmd_gnd(args, where):
         else:
             raise CtpSyntaxError("gnd: {}: invalid ground pin", where)
 
-    return struct.pack('<BH', _ctp_cmd_codes['gnd'], _pins_to_arg(pins))
+    return struct.pack('<BH', _cmd_codes['gnd'], _pins_to_arg(pins))
 
 def _cmd_delay(args, where):
-    global _ctp_cmd_codes
+    global _cmd_codes
     if len(args) > 1:
         raise CtpSyntaxError('delay: {}: only 1 delay value can be specified',
             where)
@@ -264,16 +264,11 @@ def _cmd_delay(args, where):
         if time < 0:
             raise CtpSyntaxError(
                 'delay: {}: delay time must be greater than 0', where)
-        return struct.pack('<BH', _ctp_cmd_codes['delay'], time)
+        return struct.pack('<BH', _cmd_codes['delay'], time)
     except ValueError:
         raise CtpSyntaxError('delay: {}: delay time must be a number', where)
 
-def parse_code(code):
-    """
-    Parses an enumerable containing a protocol and returns a list where each
-    element is a string conatining the 3 bytes of tester command.
-    """
-    commands = []
+def parse_line(args, line_num, commands):
     parsers = {
         'check': _cmd_check,
         'set': _cmd_set,
@@ -281,16 +276,32 @@ def parse_code(code):
         'gnd': _cmd_gnd,
         'delay': _cmd_delay,
     }
+    if args[0] not in parsers:
+        raise CtpSyntaxError('error: {}: {} is not a command', 
+                    line_num + 1, args[0])
+
+    if args[0] not in ('gnd', 'vin', 'delay'):
+        if _cmd_codes['gnd'] not in commands:
+            print("warning: {}: {}: manipulating pins without specifying gnd".
+                format(args[0], line_num + 1))
+        if _cmd_codes['vin'] not in commands:
+            print("warning: {}: {}: manipulating pins without specifying vin".
+                format(args[0], line_num + 1))
+    commands.append(parsers[args[0]](args[1:], line_num + 1))
+
+def parse_code(code):
+    """
+    Parses an enumerable containing a protocol and returns a list where each
+    element is a string conatining the 3 bytes of tester command.
+    """
+    commands = []
     # parse alle lines
     for line_num, line in enumerate(code):
         args = line.lower().split()
         if len(args) > 1 and not line[0] == '#':
             # attempt to parse the line
-            if args[0] in parsers:
-                commands.append(parsers[args[0]](args[1:], line_num + 1))
-            else:
-                raise CtpSyntaxError('error: {}: {} is not a command', 
-                    line_num + 1, args[0])
+            parse_line(args, line_num + 1, commands)
+                
     return commands
 
 def make_file(fname, commands):
