@@ -70,12 +70,13 @@ class Test_pins_to_arg(ut.TestCase):
 
     def test_invalids(self):
         case = [ True, True, True, True, False ]
-        self.assertRaises(TypeError,ctp._pins_to_arg, case)            
+        self.assertRaises(TypeError,ctp._pins_to_arg, case, 11)            
 
 class Test_get_pin_vals(ut.TestCase):
     def test_valids(self):
         case = 'on 1 2'
-        self.assertEqual(ctp._get_pin_vals(case.split()), {1: True, 2: True})
+        self.assertEqual(ctp._get_pin_vals(case.split()), 
+            {1: True, 2: True})
         self.assertTrue(len(ctp._get_pin_vals(case.split())) == 2)
 
         case = 'off 1 2'
@@ -156,105 +157,112 @@ class Test_get_pin_vals(ut.TestCase):
     def test_rest_not_last(self):
         case = 'on rest 2'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
-            "REST keyword must be the last argument", ctp._get_pin_vals, case)
+            "REST keyword must be the last argument", ctp._get_pin_vals, 
+            case)
         case = 'on rest off 1'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
-            "REST keyword must be the last argument", ctp._get_pin_vals, case)
+            "REST keyword must be the last argument", ctp._get_pin_vals, 
+            case)
 
     def test_mult_values(self):
         case = 'on 1 1'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
-            "pin 1 has already been given a value", ctp._get_pin_vals, case)
+            "pin 1 has already been given a value", ctp._get_pin_vals, 
+            case)
         case = 'on 1 off 1'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
-            "pin 1 has already been given a value", ctp._get_pin_vals, case)
+            "pin 1 has already been given a value", ctp._get_pin_vals, 
+            case)
 
 class Test_cmd_check(ut.TestCase):
     def test_valids(self):
         case = 'on 1 2 off rest'.split()
-        self.assertEqual(ctp._cmd_check(case), b'\x01\x03\x00')
+        self.assertEqual(ctp._cmd_check(case, 11), b'\x01\x03\x00')
         case = 'on rest'.split()
-        self.assertEqual(ctp._cmd_check(case), b'\x01\xff\xff')
+        self.assertEqual(ctp._cmd_check(case, 11), b'\x01\xff\xff')
 
     def test_invalids(self):
         case = 'on 1 2'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
-            "all pins must be given a value", ctp._cmd_check, case)
+            "check: 11: all pins must be given a value", 
+            ctp._cmd_check, case, 11)
 
 class Test_cmd_set(ut.TestCase):
     def test_valids(self):
         case = 'on 1 2 off rest'.split()
-        self.assertEqual(ctp._cmd_set(case), b'\x02\x03\x00')
+        self.assertEqual(ctp._cmd_set(case, 11), b'\x02\x03\x00')
         
         case = 'off rest'.split()
-        ctp._cmd_set(case)
+        ctp._cmd_set(case, 11)
         case = 'on 3 1'.split()
-        self.assertEqual(ctp._cmd_set(case), b'\x02\x05\x00')
+        self.assertEqual(ctp._cmd_set(case, 11), b'\x02\x05\x00')
 
         case = 'on rest'.split()
-        ctp._cmd_set(case)
+        ctp._cmd_set(case, 11)
         case = 'off 3 1'.split()
-        self.assertEqual(ctp._cmd_set(case), b'\x02\xfa\xff')
+        self.assertEqual(ctp._cmd_set(case, 11), b'\x02\xfa\xff')
 
 class Test_cmd_vin(ut.TestCase):
     def test_valids(self):
         case = '5 14 15 16'.split()
-        self.assertEqual(ctp._cmd_vin(case), b'\x03\x10\xe0')
+        self.assertEqual(ctp._cmd_vin(case, 11), b'\x03\x10\xe0')
         case = '16'.split()
-        self.assertEqual(ctp._cmd_vin(case), b'\x03\x00\x80')
+        self.assertEqual(ctp._cmd_vin(case, 11), b'\x03\x00\x80')
 
     def test_invalid_pins(self):
         case = '1 2'
-        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid vin pin",
-            ctp._cmd_vin, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "vin: 11: invalid vin pin",
+            ctp._cmd_vin, case, 11)
         case = '17'
-        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid vin pin",
-            ctp._cmd_vin, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "vin: 11: invalid vin pin",
+            ctp._cmd_vin, case, 11)
         case = 'habla'
-        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid vin pin",
-            ctp._cmd_vin, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, "vin: 11: invalid vin pin",
+            ctp._cmd_vin, case, 11)
 
 class Test_cmd_gnd(ut.TestCase):
     def test_valids(self):
         case = '8 12'.split()
-        self.assertEqual(ctp._cmd_gnd(case), b'\x04\x80\x08')
+        self.assertEqual(ctp._cmd_gnd(case, 11), b'\x04\x80\x08')
         case = '12'.split()
-        self.assertEqual(ctp._cmd_gnd(case), b'\x04\x00\x08')
+        self.assertEqual(ctp._cmd_gnd(case, 11), b'\x04\x00\x08')
 
     def test_invalid_pins(self):
         case = '1 2'
-        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid ground pin", 
-            ctp._cmd_gnd, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "gnd: 11: invalid ground pin", ctp._cmd_gnd, case, 11)
         case = '17'
-        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid ground pin", 
-            ctp._cmd_gnd, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "gnd: 11: invalid ground pin", ctp._cmd_gnd, case, 11)
         case = 'habla'
-        self.assertRaisesRegex(ctp.CtpSyntaxError, "Invalid ground pin", 
-            ctp._cmd_gnd, case)
+        self.assertRaisesRegex(ctp.CtpSyntaxError, 
+            "gnd: 11: invalid ground pin", ctp._cmd_gnd, case, 11)
 
 class Test_cmd_delay(ut.TestCase):
     def test_valids(self):
         case = '100'.split()
-        self.assertEqual(ctp._cmd_delay(case), b'\x05\x64\x00')
+        self.assertEqual(ctp._cmd_delay(case, 11), b'\x05\x64\x00')
         case = '0'.split()
-        self.assertEqual(ctp._cmd_delay(case), b'\x05\x00\x00')
+        self.assertEqual(ctp._cmd_delay(case, 11), b'\x05\x00\x00')
         case = '65535'.split()
-        self.assertEqual(ctp._cmd_delay(case), b'\x05\xff\xff')
+        self.assertEqual(ctp._cmd_delay(case, 11), b'\x05\xff\xff')
 
     def test_invalids(self):
         case = 'habla'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError,
-            'delay time must be a number', ctp._cmd_delay, case)
+            'delay: 11: delay time must be a number', ctp._cmd_delay, case, 11)
         case = '100 100'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError,
-            'only 1 delay value can be specified', ctp._cmd_delay, case)
+            'delay: 11: only 1 delay value can be specified', 
+            ctp._cmd_delay, case, 11)
         case = '-1'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError,
-            'delay time must be greater than 0', ctp._cmd_delay, case)
+            'delay: 11: delay time must be greater than 0', 
+            ctp._cmd_delay, case, 11)
         case = '65536'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError,
-            'delay time must be less than {}'.format(2**16 - 1),
-            ctp._cmd_delay, case)
+            'delay: 11: delay time must be less than {}'.format(2**16 - 1),
+            ctp._cmd_delay, case, 11)
 
 class Test_parse_code(ut.TestCase):
     def setUp(self):
