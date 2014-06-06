@@ -230,6 +230,7 @@ _cmd_set.pin_state = {
 
 def _cmd_vin(args, where):
     global _cmd_codes
+    _cmd_vin.is_called = True
     valid_vins = ['5', '14', '15', '16']
     pins = dict()
     for arg in args:
@@ -239,9 +240,11 @@ def _cmd_vin(args, where):
             raise CtpSyntaxError("vin: {}: invalid vin pin", where)
 
     return struct.pack('<BH', _cmd_codes['vin'], _pins_to_arg(pins))
+_cmd_vin.is_called = False
 
 def _cmd_gnd(args, where):
     global _cmd_codes
+    _cmd_gnd.is_called = True
     valid_gnds = ['8', '12']
     pins = dict()
     for arg in args:
@@ -251,6 +254,7 @@ def _cmd_gnd(args, where):
             raise CtpSyntaxError("gnd: {}: invalid ground pin", where)
 
     return struct.pack('<BH', _cmd_codes['gnd'], _pins_to_arg(pins))
+_cmd_gnd.is_called = False
 
 def _cmd_delay(args, where):
     global _cmd_codes
@@ -282,15 +286,15 @@ def parse_line(args, line_num, commands):
                     line_num + 1, args[0])
 
     if args[0] not in ('gnd', 'vin', 'delay'):
-        if _cmd_codes['gnd'] not in commands:
+        if not _cmd_gnd.is_called:
             warnings.warn(
                 "warning: {}: {}: manipulating pins without specifying gnd".
-                format(args[0], line_num + 1))
-        if _cmd_codes['vin'] not in commands:
+                format(args[0], line_num))
+        if not _cmd_vin.is_called:
             warnings.warn(
                 "warning: {}: {}: manipulating pins without specifying vin".
-                format(args[0], line_num + 1))
-    commands.append(parsers[args[0]](args[1:], line_num + 1))
+                format(args[0], line_num))
+    commands.append(parsers[args[0]](args[1:], line_num))
 
 def parse_code(code):
     """
