@@ -19,22 +19,8 @@ class Test_is_keyword(ut.TestCase):
 
 class Test_is_pin(ut.TestCase):
     def test_valids(self):
-        self.assertTrue(ctp._is_pin('1'))
-        self.assertTrue(ctp._is_pin('2'))
-        self.assertTrue(ctp._is_pin('3'))
-        self.assertTrue(ctp._is_pin('4'))
-        self.assertTrue(ctp._is_pin('5'))
-        self.assertTrue(ctp._is_pin('6'))
-        self.assertTrue(ctp._is_pin('7'))
-        self.assertTrue(ctp._is_pin('8'))
-        self.assertTrue(ctp._is_pin('9'))
-        self.assertTrue(ctp._is_pin('10'))
-        self.assertTrue(ctp._is_pin('11'))
-        self.assertTrue(ctp._is_pin('12'))
-        self.assertTrue(ctp._is_pin('13'))
-        self.assertTrue(ctp._is_pin('14'))
-        self.assertTrue(ctp._is_pin('15'))
-        self.assertTrue(ctp._is_pin('16'))
+        for pin in range(1, 17):
+            self.assertTrue(ctp._is_pin(str(pin)))
 
     def test_invalids(self):
         self.assertFalse(ctp._is_pin('0'))
@@ -51,7 +37,6 @@ class Test_pins_to_arg(ut.TestCase):
             13:True, 14:True, 15:True, 16:True
         }
         self.assertEqual(ctp._pins_to_arg(case),0b1111111111111111)
-        self.assertNotEqual(ctp._pins_to_arg(case),0b11111111111111110)
 
         case = {
             1:False, 2:False, 3:False, 4:False, 
@@ -60,13 +45,11 @@ class Test_pins_to_arg(ut.TestCase):
             13:True, 14:True, 15:True, 16:True
         }
         self.assertEqual(ctp._pins_to_arg(case),0b1111000011110000)
-        self.assertNotEqual(ctp._pins_to_arg(case),0b11110000111100001)
 
         case = {
             1:True, 2:True, 3:True, 4:True
         }
         self.assertEqual(ctp._pins_to_arg(case),0b1111)
-        self.assertNotEqual(ctp._pins_to_arg(case),0b11110)
 
     def test_invalids(self):
         case = [ True, True, True, True, False ]
@@ -77,58 +60,58 @@ class Test_get_pin_vals(ut.TestCase):
         case = 'on 1 2'
         self.assertEqual(ctp._get_pin_vals(case.split()), 
             {1: True, 2: True})
-        self.assertTrue(len(ctp._get_pin_vals(case.split())) == 2)
+        self.assertEqual(len(ctp._get_pin_vals(case.split())), 2)
 
         case = 'off 1 2'
         self.assertEqual(ctp._get_pin_vals(case.split()), 
             {1: False, 2: False})
-        self.assertTrue(len(ctp._get_pin_vals(case.split())) == 2)
+        self.assertEqual(len(ctp._get_pin_vals(case.split())), 2)
 
         case = 'on 1 2 off 3 4'
         self.assertEqual(ctp._get_pin_vals(case.split()), 
             {1: True, 2: True, 3: False, 4: False})
-        self.assertTrue(len(ctp._get_pin_vals(case.split())) == 4)
+        self.assertEqual(len(ctp._get_pin_vals(case.split())), 4)
 
     def test_rest_keyword(self):
         case = 'on 1 2 off rest'
-        self.assertEqual(ctp._get_pin_vals(case.split()), 
-            {
-                1: True, 2: True, 3: False, 4: False, 
-                5: False, 6: False, 7: False, 8: False,
-                9: False, 10: False, 11: False, 12: False,
-                13: False, 14: False, 15: False, 16: False
-            })
-        self.assertTrue(len(ctp._get_pin_vals(case.split())) == 16)
+        result = {
+            1: True, 2: True, 3: False, 4: False, 
+            5: False, 6: False, 7: False, 8: False,
+            9: False, 10: False, 11: False, 12: False,
+            13: False, 14: False, 15: False, 16: False
+        }
+        self.assertEqual(ctp._get_pin_vals(case.split()), result)
+        self.assertEqual(len(ctp._get_pin_vals(case.split())), 16)
         
         case = 'off 1 2 on rest'
-        self.assertEqual(ctp._get_pin_vals(case.split()), 
-            {
-                1: False, 2: False, 3: True, 4: True, 
-                5: True, 6: True, 7: True, 8: True,
-                9: True, 10: True, 11: True, 12: True,
-                13: True, 14: True, 15: True, 16: True,
-            })
-        self.assertTrue(len(ctp._get_pin_vals(case.split())) == 16)
+        result = {
+            1: False, 2: False, 3: True, 4: True, 
+            5: True, 6: True, 7: True, 8: True,
+            9: True, 10: True, 11: True, 12: True,
+            13: True, 14: True, 15: True, 16: True,
+        }
+        self.assertEqual(ctp._get_pin_vals(case.split()), result)
+        self.assertEqual(len(ctp._get_pin_vals(case.split())), 16)
 
         case = 'on rest'
-        self.assertEqual(ctp._get_pin_vals(case.split()), 
-            {
-                1: True, 2: True, 3: True, 4: True, 
-                5: True, 6: True, 7: True, 8: True,
-                9: True, 10: True, 11: True, 12: True,
-                13: True, 14: True, 15: True, 16: True,
-            })
-        self.assertTrue(len(ctp._get_pin_vals(case.split())) == 16)
+        result = {
+            1: True, 2: True, 3: True, 4: True, 
+            5: True, 6: True, 7: True, 8: True,
+            9: True, 10: True, 11: True, 12: True,
+            13: True, 14: True, 15: True, 16: True,
+        }
+        self.assertEqual(ctp._get_pin_vals(case.split()), result)
+        self.assertEqual(len(ctp._get_pin_vals(case.split())), 16)
 
         case = 'off rest'
-        self.assertEqual(ctp._get_pin_vals(case.split()), 
-            {
-                1: False, 2: False, 3: False, 4: False, 
-                5: False, 6: False, 7: False, 8: False,
-                9: False, 10: False, 11: False, 12: False,
-                13: False, 14: False, 15: False, 16: False
-            })
-        self.assertTrue(len(ctp._get_pin_vals(case.split())) == 16)
+        result = {
+            1: False, 2: False, 3: False, 4: False, 
+            5: False, 6: False, 7: False, 8: False,
+            9: False, 10: False, 11: False, 12: False,
+            13: False, 14: False, 15: False, 16: False
+        }
+        self.assertEqual(ctp._get_pin_vals(case.split()), result)
+        self.assertEqual(len(ctp._get_pin_vals(case.split())), 16)
 
     def test_invalids(self):
         case = 'habla 1'.split()
@@ -164,7 +147,7 @@ class Test_get_pin_vals(ut.TestCase):
             "REST keyword must be the last argument", ctp._get_pin_vals, 
             case)
 
-    def test_mult_values(self):
+    def test_multiple_values(self):
         case = 'on 1 1'.split()
         self.assertRaisesRegex(ctp.CtpSyntaxError, 
             "pin 1 has already been given a value", ctp._get_pin_vals, 
@@ -272,6 +255,12 @@ class Test_parse_code(ut.TestCase):
             b'\x02\x03\x00',
             b'\x01\x04\x00'
         ]
+        self.reset_pins()
+
+    def reset_pins(self):
+        # make sure the pin_state is reset
+        for i in ctp._cmd_set.pin_state:
+            ctp._cmd_set.pin_state[i] = False
 
     def test_valids(self):
         case = [
@@ -280,9 +269,7 @@ class Test_parse_code(ut.TestCase):
             'set on 1 2\n',
             'check on 3 off rest\n'
         ]        
-        # make sure the pin_state is reset
-        for i in ctp._cmd_set.pin_state:
-            ctp._cmd_set.pin_state[i] = False
+        self.reset_pins()
         self.assertEqual(ctp.parse_code(case), self.res)
 
     def test_skips(self):
@@ -294,9 +281,7 @@ class Test_parse_code(ut.TestCase):
             'set on 1 2\n',
             'check on 3 off rest\n'
         ]
-        # make sure the pin_state is reset
-        for i in ctp._cmd_set.pin_state:
-            ctp._cmd_set.pin_state[i] = False
+        self.reset_pins()
         self.assertEqual(ctp.parse_code(case), self.res)
 
         # test for whitespace lines
@@ -307,9 +292,7 @@ class Test_parse_code(ut.TestCase):
             'set on 1 2\n',
             'check on 3 off rest\n'
         ]
-        # make sure the pin_state is reset
-        for i in ctp._cmd_set.pin_state:
-            ctp._cmd_set.pin_state[i] = False
+        self.reset_pins()
         self.assertEqual(ctp.parse_code(case), self.res)
         case = [
             'gnd 8\n',
@@ -318,9 +301,7 @@ class Test_parse_code(ut.TestCase):
             'set on 1 2\n',
             'check on 3 off rest\n'
         ]
-        # make sure the pin_state is reset
-        for i in ctp._cmd_set.pin_state:
-            ctp._cmd_set.pin_state[i] = False
+        self.reset_pins()
         self.assertEqual(ctp.parse_code(case), self.res)
 
         # test for comments
@@ -331,9 +312,7 @@ class Test_parse_code(ut.TestCase):
             'set on 1 2\n',
             'check on 3 off rest\n'
         ]
-        # make sure the pin_state is reset
-        for i in ctp._cmd_set.pin_state:
-            ctp._cmd_set.pin_state[i] = False
+        self.reset_pins()
         self.assertEqual(ctp.parse_code(case), self.res)
 
     def test_extra_whitespace(self):
@@ -343,9 +322,7 @@ class Test_parse_code(ut.TestCase):
             'set on 1 2\n',
             'check on 3 off rest\n'
         ]
-        # make sure the pin_state is reset
-        for i in ctp._cmd_set.pin_state:
-            ctp._cmd_set.pin_state[i] = False
+        self.reset_pins
         self.assertEqual(ctp.parse_code(case), self.res)
 
 def main():
