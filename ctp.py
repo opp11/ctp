@@ -119,6 +119,7 @@ then checks if all pins (except for pin 16 since that is VIN) are OFF:
 """
 import sys
 import struct
+import warnings
 from docopt import docopt
 
 __all__ = ['CtpSyntaxError', 'make_file', 'parse_code']
@@ -282,10 +283,12 @@ def parse_line(args, line_num, commands):
 
     if args[0] not in ('gnd', 'vin', 'delay'):
         if _cmd_codes['gnd'] not in commands:
-            print("warning: {}: {}: manipulating pins without specifying gnd".
+            warnings.warn(
+                "warning: {}: {}: manipulating pins without specifying gnd".
                 format(args[0], line_num + 1))
         if _cmd_codes['vin'] not in commands:
-            print("warning: {}: {}: manipulating pins without specifying vin".
+            warnings.warn(
+                "warning: {}: {}: manipulating pins without specifying vin".
                 format(args[0], line_num + 1))
     commands.append(parsers[args[0]](args[1:], line_num + 1))
 
@@ -315,8 +318,14 @@ def make_file(fname, commands):
             file.write(cmd)
         file.write(b'END')
 
+def _ctp_formatwarning(msg, *a):
+    return str(msg) + '\n'
+
 def main():
     opts = docopt(__doc__)
+
+    # monkeypatch the warnings module to make warnings pretty
+    warnings.formatwarning = _ctp_formatwarning
 
     code = None
     if not opts['--code']:
