@@ -262,13 +262,16 @@ class Test_parse_code(ut.TestCase):
         for i in ctp._cmd_set.pin_state:
             ctp._cmd_set.pin_state[i] = False
 
+        ctp._cmd_vin.is_called = False
+        ctp._cmd_gnd.is_called = False
+
     def test_valids(self):
         case = [
             'gnd 8\n',
             'vin 16\n',
             'set on 1 2\n',
             'check on 3 off rest\n'
-        ]        
+        ]
         self.reset_pins()
         self.assertEqual(ctp.parse_code(case), self.res)
 
@@ -322,8 +325,25 @@ class Test_parse_code(ut.TestCase):
             'set on 1 2\n',
             'check on 3 off rest\n'
         ]
-        self.reset_pins
         self.assertEqual(ctp.parse_code(case), self.res)
+
+    def test_warnings(self):
+        case = [
+            'vin 16\n',
+            'set on 1 2\n'
+        ]
+        self.assertWarnsRegex(UserWarning, 
+            "warning: set: 2: manipulating pins without specifying gnd",
+            ctp.parse_code, case)
+
+        case = [
+            'gnd 8\n',
+            'set on 1 2\n'
+        ]
+        self.reset_pins()
+        self.assertWarnsRegex(UserWarning, 
+            "warning: set: 2: manipulating pins without specifying vin",
+            ctp.parse_code, case)
 
 def main():
     ut.main()
