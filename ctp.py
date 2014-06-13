@@ -17,7 +17,7 @@ import warnings
 from docopt import docopt
 
 __all__ = ['CtpSyntaxError', 'make_file', 'parse_code']
-__version__ = '0.8.0'
+__version__ = '0.9.0'
 __author__ = 'Patrick M. Jensen'
 
 class CtpSyntaxError(Exception):
