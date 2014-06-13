@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 """
 Script for compiling a protocol file to a binary file which can be uploaded to
 the component tester's SD card.
